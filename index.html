@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feria FP - Farmacia - Test de Higiene Bucal</title>
+    
+    <!-- Tailwind CSS 3.4.1 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- React & Babel for single file execution -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Framer Motion (UMD) -->
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style type="text/tailwindcss">
+        @theme {
+            --font-sans: "Inter", sans-serif;
+            --font-serif: "Cormorant Garamond", serif;
+        }
+        
+        :root {
+            --background: #f8fafc;
+            --foreground: #1e293b;
+            --primary: #0891b2;
+            --primary-foreground: #f8fafc;
+            --secondary: #f1f5f9;
+            --muted: #64748b;
+            --accent: #e2e8f0;
+            --radius: 1rem;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--foreground);
+            font-family: "Inter", sans-serif;
+        }
+
+        .font-serif {
+            font-family: "Cormorant Garamond", serif;
+        }
+
+        /* Custom selection style */
+        .option-selected {
+            background-color: #0891b2 !important;
+            color: #f8fafc !important;
+            border-color: #0891b2 !important;
+        }
+        
+        .option-selected .option-circle {
+            background-color: #f8fafc !important;
+            color: #0891b2 !important;
+            border-color: #f8fafc !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo, useEffect } = React;
+        const { motion, AnimatePresence } = Motion;
+
+        // Icons components using Lucide
+        const Icon = ({ name, className }) => {
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [name]);
+            return <i data-lucide={name} className={className}></i>;
+        };
+
+        const QUESTIONS = [
+            {
+                id: 1,
+                text: "¿Con qué frecuencia te cepillas los dientes?",
+                options: [
+                    { id: "A", text: "Menos de una vez al día" },
+                    { id: "B", text: "Una vez al día" },
+                    { id: "C", text: "Dos veces al día" },
+                    { id: "D", text: "Después de cada comida" },
+                ],
+            },
+            {
+                id: 2,
+                text: "¿Cuánto tiempo dedicas al cepillado?",
+                options: [
+                    { id: "A", text: "Menos de 1 minuto" },
+                    { id: "B", text: "Aproximadamente 1 minuto" },
+                    { id: "C", text: "Entre 2 y 3 minutos" },
+                    { id: "D", text: "Más de 3 minutos y de forma cuidadosa" },
+                ],
+            },
+            {
+                id: 3,
+                text: "¿Utilizas otros productos de higiene bucal (hilo dental, enjuague, etc.)?",
+                options: [
+                    { id: "A", text: "Nunca" },
+                    { id: "B", text: "Muy pocas veces" },
+                    { id: "C", text: "Algunas veces a la semana" },
+                    { id: "D", text: "A diario" },
+                ],
+            },
+            {
+                id: 4,
+                text: "¿Con qué frecuencia cambias tu cepillo de dientes?",
+                options: [
+                    { id: "A", text: "Rara vez o cuando está muy desgastado" },
+                    { id: "B", text: "Cada 5–6 meses" },
+                    { id: "C", text: "Cada 3 meses aproximadamente" },
+                    { id: "D", text: "Cada 2–3 meses o antes si es necesario" },
+                ],
+            },
+            {
+                id: 5,
+                text: "¿Sueles visitar al dentista para revisiones?",
+                options: [
+                    { id: "A", text: "Solo cuando tengo dolor o problemas" },
+                    { id: "B", text: "Muy de vez en cuando" },
+                    { id: "C", text: "Una vez al año" },
+                    { id: "D", text: "Cada 6 meses aproximadamente" },
+                ],
+            },
+        ];
+
+        const RESULTS = {
+            A: {
+                title: "Higiene bucal deficiente",
+                description: "Riesgo elevado de problemas como caries, gingivitis o mal aliento. Es importante mejorar los hábitos.",
+                advice: "Es fundamental que mejores tus hábitos de inmediato. El cepillado regular y el uso de hilo dental son esenciales.",
+                icon: "alert-circle",
+                color: "text-red-500"
+            },
+            B: {
+                title: "Higiene bucal mejorable",
+                description: "Hábitos básicos pero insuficientes. Conviene reforzar la rutina diaria.",
+                advice: "Conviene reforzar la rutina diaria. Intenta cepillarte al menos dos veces al día durante 2 minutos.",
+                icon: "rotate-ccw",
+                color: "text-orange-500"
+            },
+            C: {
+                title: "Buena higiene bucal",
+                description: "Mantienes hábitos adecuados, aunque puedes perfeccionarlos.",
+                advice: "¡Buen trabajo! Mantienes una rutina sólida, aunque siempre hay margen para perfeccionar la técnica.",
+                icon: "check-circle-2",
+                color: "text-blue-500"
+            },
+            D: {
+                title: "Higiene bucal excelente",
+                description: "Muy buenos hábitos. Prevención óptima de problemas bucodentales.",
+                advice: "¡Enhorabuena! Tu compromiso con tu salud bucal es ejemplar. Sigue así para mantener tu sonrisa sana.",
+                icon: "shield-check",
+                color: "text-cyan-600"
+            },
+        };
+
+        function App() {
+            const [step, setStep] = useState("start");
+            const [currentQuestion, setCurrentQuestion] = useState(0);
+            const [answers, setAnswers] = useState([]);
+            const [selectedOption, setSelectedOption] = useState("");
+
+            const handleStart = () => {
+                setStep("quiz");
+                setCurrentQuestion(0);
+                setAnswers([]);
+                setSelectedOption("");
+            };
+
+            const handleNext = () => {
+                if (selectedOption) {
+                    const newAnswers = [...answers, selectedOption];
+                    setAnswers(newAnswers);
+                    setSelectedOption("");
+
+                    if (currentQuestion < QUESTIONS.length - 1) {
+                        setCurrentQuestion(currentQuestion + 1);
+                    } else {
+                        setStep("result");
+                    }
+                }
+            };
+
+            const getResult = () => {
+                const counts = answers.reduce((acc, val) => {
+                    acc[val] = (acc[val] || 0) + 1;
+                    return acc;
+                }, {});
+
+                let maxCount = 0;
+                let result = "D";
+
+                Object.keys(counts).forEach((key) => {
+                    if (counts[key] >= maxCount) {
+                        maxCount = counts[key];
+                        result = key;
+                    }
+                });
+
+                return RESULTS[result];
+            };
+
+            const progress = ((currentQuestion + 1) / QUESTIONS.length) * 100;
+
+            return (
+                <div className="min-h-screen flex items-center justify-center p-4">
+                    <AnimatePresence mode="wait">
+                        {step === "start" && (
+                            <motion.div
+                                key="start"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                                className="max-w-md w-full"
+                            >
+                                <div className="bg-white rounded-[2rem] shadow-2xl p-8 text-center space-y-6 border border-slate-100">
+                                    <img 
+                                        src="https://storage.googleapis.com/content-ais-dev-xtlh4o4cqvdfejd4j2frcl-218311476757.europe-west2.run.app/input_file_0.png" 
+                                        alt="Logo Centro San Agustín" 
+                                        className="max-h-24 mx-auto object-contain mb-4"
+                                    />
+                                    <h1 className="text-4xl font-serif font-bold tracking-tight text-[#1e293b]">
+                                        🦷 Test: ¿Cómo es tu higiene bucal?
+                                    </h1>
+                                    <p className="text-lg text-slate-600">
+                                        Descubre el estado de tu salud dental y recibe consejos personalizados.
+                                    </p>
+                                    <button 
+                                        onClick={handleStart} 
+                                        className="w-full h-14 bg-[#0891b2] text-white text-lg font-semibold rounded-full hover:bg-[#0e7490] transition-all flex items-center justify-center group"
+                                    >
+                                        Empezar Test
+                                        <Icon name="chevron-right" className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {step === "quiz" && (
+                            <motion.div
+                                key="quiz"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="max-w-xl w-full space-y-6"
+                            >
+                                <div className="space-y-3">
+                                    <div className="flex justify-between text-sm font-bold text-[#0891b2] px-1 uppercase tracking-wider">
+                                        <span>Pregunta {currentQuestion + 1} de {QUESTIONS.length}</span>
+                                        <span>{Math.round(progress)}%</span>
+                                    </div>
+                                    <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                                        <motion.div 
+                                            className="h-full bg-[#0891b2]" 
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${progress}%` }}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="bg-white rounded-[2rem] shadow-xl p-8 space-y-8 border border-slate-50">
+                                    <h2 className="text-2xl font-serif font-bold leading-tight text-[#1e293b]">
+                                        {QUESTIONS[currentQuestion].text}
+                                    </h2>
+                                    
+                                    <div className="space-y-4">
+                                        {QUESTIONS[currentQuestion].options.map((option) => (
+                                            <button
+                                                key={option.id}
+                                                onClick={() => setSelectedOption(option.id)}
+                                                className={`w-full flex items-center p-5 rounded-2xl border-2 transition-all text-left group ${
+                                                    selectedOption === option.id 
+                                                    ? "bg-[#0891b2] border-[#0891b2] text-white shadow-lg scale-[1.02]" 
+                                                    : "bg-[#f1f5f9]/50 border-transparent hover:bg-[#f1f5f9] text-[#1e293b]"
+                                                }`}
+                                            >
+                                                <div className={`flex-shrink-0 w-10 h-10 rounded-full border-2 flex items-center justify-center mr-4 font-bold transition-all ${
+                                                    selectedOption === option.id
+                                                    ? "bg-white text-[#0891b2] border-white"
+                                                    : "bg-white/50 text-[#0891b2] border-[#0891b2]/20"
+                                                }`}>
+                                                    {option.id}
+                                                </div>
+                                                <span className="text-lg font-medium">{option.text}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <button
+                                        onClick={handleNext}
+                                        disabled={!selectedOption}
+                                        className={`w-full h-14 text-lg font-bold rounded-full transition-all ${
+                                            selectedOption 
+                                            ? "bg-[#0891b2] text-white hover:bg-[#0e7490] shadow-md" 
+                                            : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                                        }`}
+                                    >
+                                        {currentQuestion === QUESTIONS.length - 1 ? "Ver Resultados" : "Siguiente"}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {step === "result" && (
+                            <motion.div
+                                key="result"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="max-w-md w-full"
+                            >
+                                <div className="bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100">
+                                    <div className="h-3 bg-[#0891b2]" />
+                                    <div className="p-8 text-center space-y-6">
+                                        <img 
+                                            src="https://storage.googleapis.com/content-ais-dev-xtlh4o4cqvdfejd4j2frcl-218311476757.europe-west2.run.app/input_file_0.png" 
+                                            alt="Logo Centro San Agustín" 
+                                            className="max-h-16 mx-auto object-contain opacity-80 mb-2"
+                                        />
+                                        
+                                        <motion.div
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            transition={{ type: "spring", damping: 12, stiffness: 200, delay: 0.2 }}
+                                            className="mx-auto flex items-center justify-center p-6 bg-[#0891b2]/5 rounded-full w-24 h-24"
+                                        >
+                                            <Icon name={getResult().icon} className={`w-12 h-12 ${getResult().color}`} />
+                                        </motion.div>
+                                        
+                                        <div className="space-y-2">
+                                            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#0891b2]/60">Tu resultado</p>
+                                            <h3 className="text-3xl font-serif font-bold text-[#1e293b]">{getResult().title}</h3>
+                                        </div>
+
+                                        <div className="p-6 rounded-[1.5rem] bg-[#f1f5f9]/40 border border-[#0891b2]/10">
+                                            <p className="text-lg leading-relaxed text-slate-700 italic">
+                                                "{getResult().description}"
+                                            </p>
+                                        </div>
+                                        
+                                        <div className="text-left space-y-3">
+                                            <h4 className="font-bold flex items-center text-[#0891b2]">
+                                                <Icon name="check-circle-2" className="w-5 h-5 mr-2" />
+                                                Consejo experto:
+                                            </h4>
+                                            <p className="text-slate-600 leading-relaxed">
+                                                {getResult().advice}
+                                            </p>
+                                        </div>
+
+                                        <button 
+                                            onClick={handleStart} 
+                                            className="w-full h-14 bg-white text-[#0891b2] border-2 border-[#0891b2] text-lg font-bold rounded-full hover:bg-[#0891b2] hover:text-white transition-all flex items-center justify-center"
+                                        >
+                                            <Icon name="rotate-ccw" className="mr-2 w-5 h-5" />
+                                            Realizar de nuevo
+                                        </button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+
